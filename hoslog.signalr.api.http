@@ -1,0 +1,6 @@
+@hoslog.signalr.api_HostAddress = http://localhost:5222
+
+GET {{hoslog.signalr.api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
