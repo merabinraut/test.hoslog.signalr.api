@@ -1,6 +1,7 @@
 using System.Reflection;
 using hoslog.signalr.api.Filters;
 using hoslog.signalr.api.Hubs;
+using hoslog.signalr.api.Middleware;
 using hoslog.signalr.api.Models.Cache;
 using hoslog.signalr.api.Repository.CustomerNotification;
 using hoslog.signalr.api.Services;
@@ -127,6 +128,13 @@ if (app.Environment.IsDevelopment())
         x.SwaggerEndpoint("/swagger/v1/swagger.json", "hoslog.signalr.api v1");
     });
 }
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors();

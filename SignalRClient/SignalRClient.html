@@ -36,8 +36,8 @@
 
     connectionUrl.value = `http://localhost:5222/CustomerNotificationHub?customerId=${119}`;
 
-    const username = "raut";
-    const password = "rabin";
+    const username = "rabin";
+    const password = "raut";
 
     var hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(connectionUrl.value, {
