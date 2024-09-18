@@ -13,8 +13,7 @@
     <div>
         <label for="connectionUrl">SignalR Server Url:</label>
         <input id="connectionUrl" />
-        <label for="customerId">CustomerId:</label>
-        <input id="customerId" />
+        <button id="connectButton" type="submit">Connect</button>
         <button id="closeButton" disabled>Close Socket</button>
     </div>
     <p></p>
@@ -31,29 +30,41 @@
     var connectionUrl = document.getElementById("connectionUrl");
     var stateLabel = document.getElementById("stateLabel");
     var commsLog = document.getElementById("commsLog");
+    var connectButton = document.getElementById("connectButton");
     var closeButton = document.getElementById("closeButton");
     var connID = document.getElementById("connIDLable");
 
-    var customerId = 119;//document.getElementById("customerId").value;
+    connectionUrl.value = `http://localhost:5222/CustomerNotificationHub?customerId=${119}`;
 
-    connectionUrl.value = `http://localhost:5222/CustomerNotificationHub?customerId=${customerId}`;
+    const username = "raut";
+    const password = "rabin";
 
     var hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(connectionUrl.value)
+        .withUrl(connectionUrl.value, {
+            "Authorization": "Basic " + btoa(username + ":" + password)
+        })
         .build();
 
-    hubConnection.start().then(function () {
+    connectButton.onclick = function () {
         stateLabel.innerHTML = "Attempting to connect...";
-        updateState();
-        commsLog.innerHTML += '<tr>' +
-            '<td colspan="3" class="commslog-data">Connection opened</td>' +
-            '</tr>';
-    }).catch(function (error) {
+
+        // hubConnection = new signalR.HubConnectionBuilder()
+        //     .withUrl(connectionUrl.value)
+        //     .build();
+
+        hubConnection.start().then(function () {
+            stateLabel.innerHTML = "Attempting to connect...";
+            updateState();
+            commsLog.innerHTML += '<tr>' +
+                `<td colspan="3" class="commslog-data">Connection opened (${new Date()})</td>` +
+                '</tr>';
+        }).catch(function (error) {
             updateState();
             commsLog.innerHTML += '<tr>' +
                 `<td colspan="3" class="commslog-data">Error:- ${error.toString()}</td>` +
                 '</tr>';
-    });
+        });
+    };
 
     closeButton.onclick = function () {
         if (!hubConnection || hubConnection.state !== "Connected") {
@@ -67,7 +78,7 @@
     hubConnection.onclose(function (event) {
         updateState();
         commsLog.innerHTML += '<tr>' +
-            '<td colspan="3" class="commslog-data">Connection stopped.</td>' +
+            `<td colspan="3" class="commslog-data">Connection stopped. (${new Date()})</td>` +
             '</tr>';
     });
 
@@ -78,9 +89,17 @@
             '</tr>';
     });
 
-    hubConnection.on("ReceiveNotification", function (customerId, message) {
+    hubConnection.on("ReceiveNotification", function (data) {
         commsLog.innerHTML += '<tr>' +
-            '<td class="commslog-data">' + htmlEscape(message) + '</td>' +
+            '<td class="commslog-data">' + JSON.stringify(data) + '</td>' +
+            // '<td class="commslog-data">' + htmlEscape(message) + '</td>' +
+            '</tr>';
+    });
+
+    hubConnection.on("ReceiveNotificationCount", function (data) {
+        commsLog.innerHTML += '<tr>' +
+            '<td class="commslog-data">' + `(${data})` + '</td>' +
+            // '<td class="commslog-data">' + htmlEscape(message) + '</td>' +
             '</tr>';
     });
 
@@ -103,6 +122,7 @@
         }
 
         connectionUrl.disabled = true;
+        connectButton.disabled = true;
         if (!hubConnection) {
             disable();
         } else {
@@ -112,6 +132,7 @@
                     connID.innerHTML = "ConnID: N/A";
                     disable();
                     connectionUrl.disabled = false;
+                    connectButton.disabled = false;
                     break;
                 case "Connecting":
                     stateLabel.innerHTML = "Connecting...";

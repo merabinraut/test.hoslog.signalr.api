@@ -1,8 +1,8 @@
-using hoslog.signalr.api.Models.Common;
 using hoslog.signalr.api.Models.CustomerNotification;
+using hoslog.signalr.api.Repository.DBModels.CustomerNotification;
 
 namespace hoslog.signalr.api.Repository.CustomerNotification;
 public interface ICustomerNotificationRepository
 {
-    Task<CommonDBResponse> InsertNotificationAsync(NotificationManagementModel request);
+    Task<NotificationCommon> InsertNotificationAsync(NotificationManagementModel request);
 }

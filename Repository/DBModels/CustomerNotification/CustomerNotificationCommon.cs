@@ -1,17 +1,15 @@
-using System.ComponentModel.DataAnnotations;
+using hoslog.signalr.api.Models.Common;
 
-namespace hoslog.signalr.api.Models.CustomerNotification;
-public class NotificationManagementModel
+namespace hoslog.signalr.api.Repository.DBModels.CustomerNotification;
+
+public class NotificationManagementCommon
 {
-    [Required]
     public string agentId { get; set; } = null!;
-    [Required]
     public string notificationType { get; set; } = null!;
-    [Required]
     public string actionUser { get; set; } = null!;
 }
 
-public class NotificationModel
+public class NotificationCommon : CommonDBResponse
 {
     public string notificationId { get; set; } = null!;
     public string agentId { get; set; } = null!;

@@ -1,7 +1,11 @@
+using System.Net;
 using hoslog.signalr.api.Hubs;
 using hoslog.signalr.api.Models.Cache;
+using hoslog.signalr.api.Models.Common.CommonAPIResponse;
 using hoslog.signalr.api.Models.CustomerNotification;
 using hoslog.signalr.api.Repository.CustomerNotification;
+using hoslog.signalr.api.Repository.DBModels.CustomerNotification;
+using hoslog.signalr.api.Utilities.Helper;
 using Microsoft.AspNetCore.SignalR;
 
 namespace hoslog.signalr.api.Services;
@@ -25,24 +29,45 @@ public class CustomerNotificationServices
         _redisConnectionService = redisConnectionService;
     }
 
-    public async Task SendNotificationAsync(NotificationManagementModel request)
+    public async Task<(HttpStatusCode statusCode, CommonAPIResponse response)> SendNotificationAsync(NotificationManagementModel request)
     {
         try
         {
-            var dbResponse = _customerNotificationRepository.InsertNotificationAsync(request);
-            var connectionIds = await _redisConnectionService.GetConnectionsAsync(request.agentId);
-            var sendTasks = new List<Task>();
+            var dbRequest = request.MapObject<NotificationManagementCommon>();
+            var dbResponse = await _customerNotificationRepository.InsertNotificationAsync(request);
+            if (!string.IsNullOrEmpty(dbResponse.code) && dbResponse.code != "0")
+                return (HttpStatusCode.BadRequest, new CommonAPIResponse
+                {
+                    code = "1",
+                    message = "Failed to insert notification"
+                });
 
+            var dbResponseObject = dbResponse.MapObject<NotificationModel>();
+            var connectionIds = await _redisConnectionService.GetConnectionsAsync(request.agentId);
+
+            var sendTasks = new List<Task>();
             foreach (var connectionId in connectionIds)
             {
                 sendTasks.Add(_hubContext.Clients.Client(connectionId)
-                    .SendAsync("ReceiveNotification", request.agentId, request.notificationBody));
+                    .SendAsync("ReceiveNotification", dbResponseObject));
+                sendTasks.Add(_hubContext.Clients.Client(connectionId)
+                    .SendAsync("ReceiveNotificationCount", dbResponseObject.notificationUnReadCount));
             }
             await Task.WhenAll(sendTasks);
+
+            return (HttpStatusCode.OK, new CommonAPIResponse
+            {
+                code = "0",
+                message = "Success"
+            });
         }
         catch (Exception ex)
         {
-            throw;
+            return (HttpStatusCode.BadRequest, new CommonAPIResponse
+            {
+                code = "1",
+                message = $"An error occurred while sending notification: {ex.Message}"
+            });
         }
         // await _hubContext.Clients.All.SendAsync("ReceiveNotification", request.agentId, request.notificationBody);
     }
