@@ -48,10 +48,6 @@
     connectButton.onclick = function () {
         stateLabel.innerHTML = "Attempting to connect...";
 
-        // hubConnection = new signalR.HubConnectionBuilder()
-        //     .withUrl(connectionUrl.value)
-        //     .build();
-
         hubConnection.start().then(function () {
             stateLabel.innerHTML = "Attempting to connect...";
             updateState();

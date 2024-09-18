@@ -18,6 +18,13 @@ namespace hoslog.signalr.api.Controller
             _notificationServices = notificationServices;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerNotifications(string customerId)
+        {
+            var notifications = await _notificationServices.GetCustomerNotificationAsync(customerId);
+            return Ok(notifications);
+        }
+
         [HttpPost("send")]
         public async Task<IActionResult> SendNotification([FromBody] NotificationManagementModel request)
         {
@@ -25,13 +32,6 @@ namespace hoslog.signalr.api.Controller
             return statusCode == HttpStatusCode.OK
              ? Ok(response)
              : BadRequest(response);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetCustomerNotifications(string customerId)
-        {
-            var notifications = await _notificationServices.GetCustomerNotificationAsync(customerId);
-            return Ok(notifications);
         }
 
         [HttpPatch("mark-read")]
